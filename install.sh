@@ -87,6 +87,22 @@ else
   info "Server/standard install selected."
 fi
 
+# ── Auto-update question ──────────────────────────────────────
+echo ""
+echo -e "  ${BOLD}Would you like Fish Proxy to check for and deploy updates${RESET}"
+echo -e "  ${BOLD}automatically every time the server starts?${RESET}"
+echo -e "  ${BLUE}If yes: git pull + pnpm install runs on every startup.${RESET}"
+echo -e "  ${BLUE}If no:  update manually whenever you want.${RESET}"
+echo ""
+read -p "  Enable auto-updates on startup? (y/n): " UPDATE_CHOICE
+AUTO_UPDATE=false
+if [[ "$UPDATE_CHOICE" =~ ^[Yy]$ ]]; then
+  AUTO_UPDATE=true
+  info "Auto-updates enabled."
+else
+  info "Auto-updates disabled."
+fi
+
 # ── Install dependencies: macOS ──────────────────────────────
 if [[ "$OS" == "macos" ]]; then
 
@@ -330,11 +346,29 @@ step "Starting Fish Proxy"
 
 pm2 delete fish-proxy &>/dev/null || true
 
-PORT=$PORT pm2 start src/index.js \
-  --name fish-proxy \
-  --restart-delay 3000 \
-  --max-restarts 10 \
-  --quiet
+if [ "$AUTO_UPDATE" = true ]; then
+  cat > "$INSTALL_DIR/start-with-update.sh" << 'WRAPEOF'
+#!/bin/bash
+cd INSTALL_DIR_PLACEHOLDER
+echo "[Fish Proxy] Checking for updates..."
+git pull --quiet && pnpm install --silent && echo "[Fish Proxy] Up to date." || echo "[Fish Proxy] Update check failed, starting anyway."
+exec node src/index.js
+WRAPEOF
+  sed -i "s|INSTALL_DIR_PLACEHOLDER|$INSTALL_DIR|g" "$INSTALL_DIR/start-with-update.sh"
+  chmod +x "$INSTALL_DIR/start-with-update.sh"
+  PORT=$PORT pm2 start "$INSTALL_DIR/start-with-update.sh" \
+    --name fish-proxy \
+    --restart-delay 3000 \
+    --max-restarts 10 \
+    --quiet
+  info "Auto-updates ON — Fish Proxy pulls latest on every restart."
+else
+  PORT=$PORT pm2 start src/index.js \
+    --name fish-proxy \
+    --restart-delay 3000 \
+    --max-restarts 10 \
+    --quiet
+fi
 
 pm2 save --quiet
 
@@ -370,6 +404,11 @@ echo -e "  ${CYAN}pm2 restart fish-proxy${RESET} — restart the server"
 echo -e "  ${CYAN}pm2 stop fish-proxy${RESET}    — stop the server"
 echo ""
 echo -e "  ${YELLOW}Note:${RESET} Make sure port $PORT is open in your firewall/security group"
+if [ "$AUTO_UPDATE" = true ]; then
+  echo -e "  ${GREEN}Auto-updates: ON${RESET}  — Fish Proxy pulls latest code on every restart"
+else
+  echo -e "  ${YELLOW}Auto-updates: OFF${RESET} — to update manually: cd ~/fish-proxy && git pull && pnpm install && pm2 restart fish-proxy"
+fi
 if [ "$INSTALL_APP" = true ]; then
   echo -e "  ${YELLOW}Note:${RESET} Desktop app launches Fish Proxy on port 8080"
 fi
