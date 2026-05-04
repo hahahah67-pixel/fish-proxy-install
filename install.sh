@@ -126,7 +126,7 @@ if [[ "$OS" == "macos" ]]; then
   step "Checking Git"
   if ! command -v git &>/dev/null; then
     info "Installing Git..."
-    brew install git --quiet
+    brew install git
     success "Git installed"
   else
     success "Git already installed ($(git --version))"
@@ -140,14 +140,14 @@ if [[ "$OS" == "macos" ]]; then
       success "Node.js v$(node --version) already installed ✓"
     else
       warn "Node.js v$(node --version) is too old. Upgrading..."
-      brew install node@${REQUIRED_NODE} --quiet
-      brew link --overwrite node@${REQUIRED_NODE} --quiet
+      brew install node@${REQUIRED_NODE}
+      brew link --overwrite node@${REQUIRED_NODE}
       success "Node.js upgraded"
     fi
   else
     info "Installing Node.js ${REQUIRED_NODE}..."
-    brew install node@${REQUIRED_NODE} --quiet
-    brew link --overwrite node@${REQUIRED_NODE} --quiet
+    brew install node@${REQUIRED_NODE}
+    brew link --overwrite node@${REQUIRED_NODE}
     success "Node.js $(node --version) installed"
   fi
 
@@ -155,20 +155,20 @@ if [[ "$OS" == "macos" ]]; then
 else
 
   step "Updating package lists"
-  sudo apt-get update -qq
+  sudo apt-get update
   success "Package lists updated"
 
   step "Checking Git"
   if ! command -v git &>/dev/null; then
     info "Installing Git..."
-    sudo apt-get install -y -qq git
+    sudo apt-get install -y git
     success "Git installed"
   else
     success "Git already installed ($(git --version))"
   fi
 
   if ! command -v curl &>/dev/null; then
-    sudo apt-get install -y -qq curl
+    sudo apt-get install -y curl
   fi
 
   step "Checking Node.js"
@@ -189,7 +189,7 @@ else
 
   if [ "$INSTALL_NODE" = true ]; then
     curl -fsSL https://deb.nodesource.com/setup_${REQUIRED_NODE}.x | sudo -E bash - &>/dev/null
-    sudo apt-get install -y -qq nodejs
+    sudo apt-get install -y nodejs
     success "Node.js $(node --version) installed"
   fi
 
@@ -234,13 +234,13 @@ if [ -d "$INSTALL_DIR" ]; then
   else
     info "Keeping existing directory. Pulling latest changes..."
     cd "$INSTALL_DIR"
-    git pull --quiet
+    git pull
     success "Repo updated"
   fi
 fi
 
 if [ ! -d "$INSTALL_DIR" ]; then
-  git clone --quiet "$REPO_URL" "$INSTALL_DIR"
+  git clone "$REPO_URL" "$INSTALL_DIR"
   success "Repo cloned to $INSTALL_DIR"
 fi
 
@@ -370,7 +370,7 @@ if [ "$AUTO_UPDATE" = true ]; then
 #!/bin/bash
 cd INSTALL_DIR_PLACEHOLDER
 echo "[Fish Proxy] Checking for updates..."
-git pull --quiet && pnpm install && echo "[Fish Proxy] Up to date." || echo "[Fish Proxy] Update check failed, starting anyway."
+git pull && pnpm install && echo "[Fish Proxy] Up to date." || echo "[Fish Proxy] Update check failed, starting anyway."
 exec node src/index.js
 WRAPEOF
   sed -i "s|INSTALL_DIR_PLACEHOLDER|$INSTALL_DIR|g" "$INSTALL_DIR/start-with-update.sh"
