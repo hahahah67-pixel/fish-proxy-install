@@ -71,13 +71,21 @@ if [[ "$OS" == "macos" ]]; then
   echo -e "  This lets you launch Fish Proxy directly from your Mac without a terminal."
   echo -e "  ${BLUE}Only choose yes if you are on a personal Mac, not a server.${RESET}"
   echo ""
-  read -p "  Install as macOS app? (y/n): " APP_CHOICE
+  while true; do
+    read -p "  Install as macOS app? (y/n): " APP_CHOICE </dev/tty
+    if [[ "$APP_CHOICE" =~ ^[YyNn]$ ]]; then break; fi
+    warn "Please answer y or n."
+  done
 else
   echo -e "  ${BOLD}Would you like to install Fish Proxy as a Linux desktop app?${RESET}"
   echo -e "  This creates a .deb package you can launch from your app menu."
   echo -e "  ${BLUE}Only choose yes if you are on a personal Linux desktop, not a server.${RESET}"
   echo ""
-  read -p "  Install as Linux desktop app? (y/n): " APP_CHOICE
+  while true; do
+    read -p "  Install as Linux desktop app? (y/n): " APP_CHOICE </dev/tty
+    if [[ "$APP_CHOICE" =~ ^[YyNn]$ ]]; then break; fi
+    warn "Please answer y or n."
+  done
 fi
 
 if [[ "$APP_CHOICE" =~ ^[Yy]$ ]]; then
@@ -215,7 +223,11 @@ INSTALL_DIR="$HOME/fish-proxy"
 
 if [ -d "$INSTALL_DIR" ]; then
   warn "Directory $INSTALL_DIR already exists."
-  read -p "  Overwrite it? (y/n): " OVERWRITE
+  while true; do
+    read -p "  Overwrite it? (y/n): " OVERWRITE </dev/tty
+    if [[ "$OVERWRITE" =~ ^[YyNn]$ ]]; then break; fi
+    warn "Please answer y or n."
+  done
   if [[ "$OVERWRITE" =~ ^[Yy]$ ]]; then
     rm -rf "$INSTALL_DIR"
     info "Removed old install."
@@ -333,8 +345,15 @@ fi
 # ── Configure port ────────────────────────────────────────────
 step "Port configuration"
 DEFAULT_PORT=8080
-read -p "  What port should Fish Proxy run on? [default: $DEFAULT_PORT]: " PORT_INPUT
-PORT=${PORT_INPUT:-$DEFAULT_PORT}
+while true; do
+  read -p "  What port should Fish Proxy run on? [default: $DEFAULT_PORT]: " PORT_INPUT </dev/tty
+  PORT_INPUT=${PORT_INPUT:-$DEFAULT_PORT}
+  if [[ "$PORT_INPUT" =~ ^[0-9]+$ ]] && [ "$PORT_INPUT" -ge 1024 ] && [ "$PORT_INPUT" -le 65535 ]; then
+    break
+  fi
+  warn "Enter a valid port (1024-65535) or press enter for $DEFAULT_PORT."
+done
+PORT=$PORT_INPUT
 
 if lsof -Pi :$PORT -sTCP:LISTEN -t &>/dev/null 2>&1; then
   warn "Port $PORT is already in use. Trying $((PORT+1))..."
