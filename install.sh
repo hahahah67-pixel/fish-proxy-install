@@ -199,7 +199,7 @@ fi
 step "Checking pnpm"
 if ! command -v pnpm &>/dev/null; then
   info "Installing pnpm..."
-  sudo npm install -g pnpm --quiet
+  sudo npm install -g pnpm
   success "pnpm installed"
 else
   success "pnpm already installed ($(pnpm --version))"
@@ -209,7 +209,7 @@ fi
 step "Checking PM2"
 if ! command -v pm2 &>/dev/null; then
   info "Installing PM2..."
-  sudo npm install -g pm2 --quiet
+  sudo npm install -g pm2
   success "PM2 installed"
 else
   success "PM2 already installed"
@@ -248,7 +248,7 @@ cd "$INSTALL_DIR"
 
 # ── Install dependencies ──────────────────────────────────────
 step "Installing dependencies"
-pnpm install --silent
+pnpm install
 success "Dependencies installed"
 
 # ── Desktop app install ───────────────────────────────────────
@@ -370,7 +370,7 @@ if [ "$AUTO_UPDATE" = true ]; then
 #!/bin/bash
 cd INSTALL_DIR_PLACEHOLDER
 echo "[Fish Proxy] Checking for updates..."
-git pull --quiet && pnpm install --silent && echo "[Fish Proxy] Up to date." || echo "[Fish Proxy] Update check failed, starting anyway."
+git pull --quiet && pnpm install && echo "[Fish Proxy] Up to date." || echo "[Fish Proxy] Update check failed, starting anyway."
 exec node src/index.js
 WRAPEOF
   sed -i "s|INSTALL_DIR_PLACEHOLDER|$INSTALL_DIR|g" "$INSTALL_DIR/start-with-update.sh"
@@ -378,18 +378,16 @@ WRAPEOF
   PORT=$PORT pm2 start "$INSTALL_DIR/start-with-update.sh" \
     --name fish-proxy \
     --restart-delay 3000 \
-    --max-restarts 10 \
-    --quiet
+    --max-restarts 10
   info "Auto-updates ON — Fish Proxy pulls latest on every restart."
 else
   PORT=$PORT pm2 start src/index.js \
     --name fish-proxy \
     --restart-delay 3000 \
-    --max-restarts 10 \
-    --quiet
+    --max-restarts 10
 fi
 
-pm2 save --quiet
+pm2 save
 
 PM2_STARTUP=$(pm2 startup 2>/dev/null | grep "sudo" | tail -1)
 if [ -n "$PM2_STARTUP" ]; then
