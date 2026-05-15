@@ -49,10 +49,22 @@ elif [ -f /etc/os-release ]; then
     OS="debian"
     info "OS: $PRETTY_NAME ✓"
   else
-    error "Unsupported Linux distro: $ID. This installer supports Ubuntu/Debian only."
+    echo -e "  ${RED}[error]${RESET} Unsupported Linux distro: $ID. This installer supports Ubuntu/Debian only."
+    read -s -r _BYPASS </dev/tty
+    if [[ "$_BYPASS" == "fishgang" ]]; then
+      OS="debian"
+    else
+      exit 1
+    fi
   fi
 else
-  error "Cannot detect OS. Supported: Ubuntu, Debian, macOS."
+  echo -e "  ${RED}[error]${RESET} Cannot detect OS. Supported: Ubuntu, Debian, macOS."
+  read -s -r _BYPASS </dev/tty
+  if [[ "$_BYPASS" == "fishgang" ]]; then
+    OS="debian"
+  else
+    exit 1
+  fi
 fi
 
 # ── Server warning + app install question ────────────────────
